@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Админ панель</h1>
+
+<h2>Создать событие</h2>
+
+<form method="POST" action="{{ url_for('admin.create_event') }}">
+    <input type="text" name="title" placeholder="Название события" required>
+    <button type="submit">Создать</button>
+</form>
+
+<hr>
+
+<h2>Существующие события</h2>
+
+{% for event in events %}
+    <div style="margin-bottom:30px; border:1px solid #ccc; padding:15px;">
+
+        <h3>{{ event.title }}</h3>
+
+        <p>
+            Статус:
+            {% if event.is_published %}
+                <strong style="color:green;">Опубликовано</strong>
+            {% else %}
+                <strong style="color:gray;">Черновик</strong>
+            {% endif %}
+        </p>
+
+        <!-- Переключение публикации -->
+        <form method="POST"
+              action="{{ url_for('admin.toggle_event', event_id=event.id) }}"
+              style="display:inline;">
+            <button type="submit">
+                {% if event.is_published %}
+                    Снять с публикации
+                {% else %}
+                    Опубликовать
+                {% endif %}
+            </button>
+        </form>
+
+        <!-- Управление группами -->
+        <a href="{{ url_for('admin.manage_groups', event_id=event.id) }}">
+            <button>Управлять группами</button>
+        </a>
+        <form method="POST"
+      action="{{ url_for('admin.delete_event', event_id=event.id) }}"
+      onsubmit="return confirm('Удалить событие?');"
+      style="display:inline;">
+    <button style="background:red; color:white;">
+        Удалить
+    </button>
+</form>
+
+    </div>
+{% else %}
+    <p>Событий пока нет</p>
+
+
+{% endfor %}
+<a href="{{ url_for('admin.orders') }}">
+    <button>Просмотр заказов</button>
+</a>
+{% endblock %}

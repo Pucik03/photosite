@@ -1,0 +1,457 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="payment-page">
+    <div class="container">
+        <div class="payment-card">
+            <!-- Заголовок -->
+            <div class="payment-header">
+                <div class="payment-icon">💳</div>
+                <h1>Оплата заказа</h1>
+                <p class="order-number">Заказ №{{ order.id }}</p>
+            </div>
+
+            <!-- Информация о заказе -->
+            <div class="order-info">
+                <div class="info-row">
+                    <span class="info-label">Статус:</span>
+                    <span class="info-value status-awaiting">Ожидает оплаты</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Сумма:</span>
+                    <span class="info-value amount">{{ "%.2f"|format(total) }} ₽</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Получатель:</span>
+                    <span class="info-value">{{ order.customer_name }}</span>
+                </div>
+            </div>
+
+            <!-- QR-код для оплаты -->
+            <div class="qr-section">
+                <h2>Оплата по СБП</h2>
+                <p class="qr-description">Отсканируйте QR-код в приложении вашего банка</p>
+
+                <div class="qr-container">
+                    {% if qr_code %}
+                    <img src="{{ url_for('static', filename='uploads/' + qr_code) }}" alt="QR-код для оплаты" class="qr-code">
+                    {% else %}
+                    <div class="qr-placeholder">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="3" y1="15" x2="21" y2="15"></line>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <line x1="15" y1="3" x2="15" y2="21"></line>
+                        </svg>
+                        <p>QR-код будет доступен после подтверждения заказа</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="payment-details">
+                    <div class="detail-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 8v4l3 3"></path>
+                        </svg>
+                        <span>Сумма к оплате: <strong>{{ "%.2f"|format(total) }} ₽</strong></span>
+                    </div>
+                    <div class="detail-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        <span>Получатель: ИП Фотограф</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Инструкция -->
+            <div class="instructions">
+                <h3>Как оплатить?</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-text">Откройте приложение вашего банка</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-text">Выберите оплату по QR-коду</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-text">Отсканируйте QR-код</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-text">Подтвердите перевод</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопка подтверждения оплаты -->
+            <div class="confirm-section">
+                <form method="POST" action="{{ url_for('public.confirm_payment', order_id=order.id) }}" class="confirm-form">
+                    <button type="submit" class="confirm-btn" id="confirm-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Я оплатил(а)
+                    </button>
+                </form>
+                <p class="confirm-note">
+                    ⏱ Нажмите кнопку после того, как переведете деньги
+                </p>
+            </div>
+
+            <!-- Возврат в корзину -->
+            <div class="back-link">
+                <a href="{{ url_for('public.home') }}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Вернуться на главную
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-page {
+        background: var(--bg-primary);
+        min-height: calc(100vh - 200px);
+        padding: 60px 0;
+    }
+
+    .container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .payment-card {
+        background: var(--bg-secondary);
+        border-radius: 24px;
+        padding: 40px;
+        border: 1px solid var(--border-color);
+        animation: fadeInUp 0.5s ease;
+    }
+
+    /* Заголовок */
+    .payment-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .payment-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+
+    .payment-header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 8px;
+    }
+
+    .order-number {
+        color: var(--accent-primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Информация о заказе */
+    .order-info {
+        background: var(--bg-tertiary);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .info-value {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .status-awaiting {
+        color: #f39c12;
+    }
+
+    .amount {
+        color: var(--accent-primary);
+        font-size: 1.1rem;
+    }
+
+    /* QR секция */
+    .qr-section {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .qr-section h2 {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+
+    .qr-description {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-bottom: 25px;
+    }
+
+    .qr-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 25px;
+    }
+
+    .qr-code {
+        width: 250px;
+        height: 250px;
+        border-radius: 20px;
+        background: white;
+        padding: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .qr-placeholder {
+        width: 250px;
+        height: 250px;
+        background: var(--bg-tertiary);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        border: 2px dashed var(--border-color);
+    }
+
+    .qr-placeholder svg {
+        stroke: var(--text-muted);
+    }
+
+    .qr-placeholder p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin: 0;
+        padding: 0 20px;
+        text-align: center;
+    }
+
+    .payment-details {
+        background: var(--bg-tertiary);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: left;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .detail-item svg {
+        stroke: var(--accent-primary);
+        flex-shrink: 0;
+    }
+
+    .detail-item strong {
+        color: var(--accent-primary);
+    }
+
+    /* Инструкция */
+    .instructions {
+        background: var(--bg-tertiary);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .instructions h3 {
+        font-size: 1rem;
+        margin-bottom: 15px;
+        color: var(--text-primary);
+    }
+
+    .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .step-number {
+        width: 32px;
+        height: 32px;
+        background: var(--accent-primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .step-text {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    /* Кнопка подтверждения */
+    .confirm-section {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .confirm-btn {
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s;
+    }
+
+    .confirm-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(246, 142, 86, 0.4);
+    }
+
+    .confirm-btn:active {
+        transform: translateY(0);
+    }
+
+    .confirm-note {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 12px;
+    }
+
+    /* Ссылка назад */
+    .back-link {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .back-link a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.3s;
+    }
+
+    .back-link a:hover {
+        color: var(--accent-primary);
+    }
+
+    /* Анимация */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .payment-card {
+            padding: 25px;
+        }
+
+        .payment-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .qr-code, .qr-placeholder {
+            width: 200px;
+            height: 200px;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
+        }
+
+        .step-text {
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .payment-card {
+            padding: 20px;
+        }
+
+        .info-row {
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .confirm-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    // Простое логирование для отладки
+    const confirmForm = document.querySelector('.confirm-form');
+    if (confirmForm) {
+        confirmForm.addEventListener('submit', function(e) {
+            console.log('Form submitted!');
+            const btn = document.getElementById('confirm-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Обработка...';
+            }
+            // Не блокируем отправку формы
+        });
+    }
+</script>
+{% endblock %}

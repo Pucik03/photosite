@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="event-detail-page">
+    <!-- Hero секция с событием -->
+    <div class="event-hero">
+        {% if event.preview_image %}
+        <div class="event-hero-image">
+            <img src="{{ url_for('static', filename='uploads/' + event.preview_image) }}" alt="{{ event.title }}">
+            <div class="hero-overlay"></div>
+        </div>
+        {% else %}
+        <div class="event-hero-placeholder">
+            <div class="placeholder-icon">📸</div>
+        </div>
+        {% endif %}
+
+        <div class="event-hero-content">
+            <div class="container">
+                <nav class="breadcrumb">
+                    <a href="{{ url_for('public.home') }}" class="breadcrumb-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-8H9v8H5a2 2 0 0 1-2-2z"></path>
+                        </svg>
+                        Главная
+                    </a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">{{ event.title }}</span>
+                </nav>
+
+                <h1 class="event-title">{{ event.title }}</h1>
+
+                {% if event.description %}
+                <p class="event-description">{{ event.description }}</p>
+                {% endif %}
+
+                <div class="event-stats">
+                    <div class="stat-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>
+                            {% set total_photos = namespace(count=0) %}
+                            {% for group in event.groups %}
+                                {% set total_photos.count = total_photos.count + group.photos|length %}
+                            {% endfor %}
+                            {{ total_photos.count }} фотографий
+                        </span>
+                    </div>
+                    <div class="stat-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3h18v18H3zM8 8h8v8H8z"></path>
+                        </svg>
+                        <span>{{ event.groups|length }} групп</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Группы фотографий -->
+    <div class="groups-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Фотографии события</h2>
+                <p class="section-subtitle">Выберите интересующую вас группу фотографий</p>
+            </div>
+
+            {% if event.groups %}
+            <div class="groups-grid">
+                {% for group in event.groups %}
+                <div class="group-card" data-group-id="{{ group.id }}">
+                    <div class="group-card-inner">
+                        <div class="group-card-icon">
+                            {% if group.photos %}
+                            <img src="{{ url_for('static', filename='uploads/' + group.photos[0].thumb_filename) }}" alt="{{ group.title }}">
+                            {% else %}
+                            <div class="icon-placeholder">📁</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="group-card-content">
+                            <h3 class="group-title">{{ group.title }}</h3>
+
+                            <div class="group-stats">
+                                <span class="photos-count">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                    </svg>
+                                    {{ group.photos|length }} фото
+                                </span>
+                                {% if group.photos %}
+                                <span class="price-range">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    </svg>
+                                    от
+                                    {% set min_price = group.photos|map(attribute='price')|min %}
+                                    {{ "%.0f"|format(min_price) }} ₽
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <a href="{{ url_for('public.group_detail', group_id=group.id) }}" class="view-group-btn">
+                                <span>Смотреть фото</span>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-groups">
+                <div class="empty-icon">📭</div>
+                <h3>Группы фотографий пока не добавлены</h3>
+                <p>В этом событии еще нет фотографий. Загляните позже!</p>
+                <a href="{{ url_for('public.home') }}" class="btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Вернуться к событиям
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Дополнительная информация -->
+    <div class="info-section">
+        <div class="container">
+            <div class="info-card">
+                <div class="info-icon">💡</div>
+                <div class="info-content">
+                    <h3>Как приобрести фотографии?</h3>
+                    <p>Выберите понравившееся фото в любой из групп, добавьте его в корзину и оформите заказ. После подтверждения оплаты вы получите фотографии в высоком разрешении без водяных знаков.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .event-detail-page {
+        background: var(--bg-primary);
+    }
+
+    /* Hero секция */
+    .event-hero {
+        position: relative;
+        min-height: 500px;
+        display: flex;
+        align-items: flex-end;
+        overflow: hidden;
+    }
+
+    .event-hero-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .event-hero-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+    }
+
+    .event-hero-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .placeholder-icon {
+        font-size: 6rem;
+        opacity: 0.5;
+    }
+
+    .event-hero-content {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        padding: 60px 0 80px;
+        color: white;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 30px;
+        font-size: 0.85rem;
+    }
+
+    .breadcrumb-link {
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: color 0.3s;
+    }
+
+    .breadcrumb-link:hover {
+        color: var(--accent-primary);
+    }
+
+    .breadcrumb-separator {
+        color: rgba(255,255,255,0.5);
+    }
+
+    .breadcrumb-current {
+        color: white;
+    }
+
+    .event-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .event-description {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 30px;
+        max-width: 800px;
+        color: rgba(255,255,255,0.9);
+    }
+
+    .event-stats {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        padding: 8px 16px;
+        border-radius: 40px;
+        font-size: 0.85rem;
+        color: white;
+    }
+
+    .stat-item svg {
+        stroke: var(--accent-primary);
+    }
+
+    /* Секция групп */
+    .groups-section {
+        padding: 60px 0;
+        background: var(--bg-primary);
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .section-header h2 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .section-header h2::after {
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+    }
+
+    .section-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    /* Сетка групп */
+    .groups-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 30px;
+    }
+
+    .group-card {
+        background: var(--bg-secondary);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+    }
+
+    .group-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border-color: var(--accent-primary);
+    }
+
+    .group-card-inner {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .group-card-icon {
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        background: var(--bg-tertiary);
+        position: relative;
+    }
+
+    .group-card-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s;
+    }
+
+    .group-card:hover .group-card-icon img {
+        transform: scale(1.05);
+    }
+
+    .icon-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: var(--text-muted);
+    }
+
+    .group-card-content {
+        padding: 20px;
+        flex: 1;
+    }
+
+    .group-title {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+    }
+
+    .group-stats {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .photos-count, .price-range {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .view-group-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--accent-primary);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 40px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+
+    .view-group-btn:hover {
+        background: var(--accent-hover);
+        transform: translateX(5px);
+    }
+
+    /* Пустое состояние */
+    .empty-groups {
+        text-align: center;
+        padding: 80px 20px;
+        background: var(--bg-secondary);
+        border-radius: 20px;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-groups h3 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+
+    .empty-groups p {
+        color: var(--text-secondary);
+        margin-bottom: 25px;
+    }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        border: 2px solid var(--accent-primary);
+        color: var(--accent-primary);
+        padding: 10px 24px;
+        border-radius: 40px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-secondary:hover {
+        background: var(--accent-primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Информационная секция */
+    .info-section {
+        padding: 40px 0 80px;
+        background: var(--bg-secondary);
+    }
+
+    .info-card {
+        background: var(--bg-tertiary);
+        border-radius: 20px;
+        padding: 30px;
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        border: 1px solid var(--border-color);
+    }
+
+    .info-icon {
+        font-size: 2.5rem;
+    }
+
+    .info-content h3 {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
+
+    .info-content p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .event-hero {
+            min-height: 400px;
+        }
+
+        .event-hero-content {
+            padding: 40px 0 60px;
+        }
+
+        .event-title {
+            font-size: 2rem;
+        }
+
+        .event-description {
+            font-size: 0.95rem;
+        }
+
+        .event-stats {
+            gap: 15px;
+        }
+
+        .stat-item {
+            font-size: 0.75rem;
+            padding: 5px 12px;
+        }
+
+        .groups-section {
+            padding: 40px 0;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .groups-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .info-card {
+            flex-direction: column;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .info-icon {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .event-title {
+            font-size: 1.5rem;
+        }
+
+        .event-stats {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stat-item {
+            width: fit-content;
+        }
+
+        .group-card-icon {
+            height: 180px;
+        }
+    }
+
+    /* Анимации */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .group-card {
+        animation: fadeInUp 0.5s ease forwards;
+        animation-delay: calc(var(--index, 0) * 0.05s);
+    }
+
+    .group-card:nth-child(1) { --index: 1; }
+    .group-card:nth-child(2) { --index: 2; }
+    .group-card:nth-child(3) { --index: 3; }
+    .group-card:nth-child(4) { --index: 4; }
+    .group-card:nth-child(5) { --index: 5; }
+    .group-card:nth-child(6) { --index: 6; }
+</style>
+{% endblock %}

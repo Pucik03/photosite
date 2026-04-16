@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photo Store</title>
+
+    <!-- Подключение шрифтов -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ПОДКЛЮЧЕНИЕ ОСНОВНОГО CSS ФАЙЛА (исправленный путь!) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Дополнительные стили для хедера и кнопки корзины -->
+    <style>
+        /* ===== ПЕРЕМЕННЫЕ (ЦВЕТОВАЯ ПАЛИТРА) ===== */
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2a2a2a;
+            --bg-card: #242424;
+            --bg-hover: #2f2f2f;
+            --accent-primary: #f68e56;
+            --accent-hover: #e07c42;
+            --accent-muted: #8b5a2b;
+            --accent-light: #ffaa7a;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-muted: #6c6c6c;
+            --border-color: #333333;
+            --border-light: #3a3a3a;
+        }
+
+           /* HEADER - меню слева (прижато к левому краю) */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav a:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Кнопка корзины */
+        .cart-button {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(246, 142, 86, 0.3);
+        }
+
+        .cart-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .cart-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .cart-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(246, 142, 86, 0.4);
+        }
+
+        .cart-icon {
+            width: 20px;
+            height: 20px;
+            stroke: white;
+            stroke-width: 2;
+            fill: none;
+            transition: transform 0.3s;
+        }
+
+        .cart-button:hover .cart-icon {
+            transform: scale(1.1);
+        }
+
+        .cart-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cart-badge {
+            background: white;
+            color: var(--accent-primary);
+            border-radius: 30px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            min-width: 22px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cart-button:hover .cart-badge {
+            transform: scale(1.05);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .cart-badge.bump {
+            animation: bounce 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .cart-button {
+                padding: 8px 18px;
+            }
+            .cart-text {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="nav">
+        <a href="{{ url_for('public.home') }}">Главная</a>
+        <a href="{{ url_for('public.info') }}">Информация</a>
+        <a href="{{ url_for('admin.login') }}">Админ</a>
+    </div>
+
+    <a href="{{ url_for('public.cart') }}" class="cart-button" id="cart-button">
+        <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <span class="cart-text">Корзина</span>
+        <span class="cart-badge" id="cart-count">0</span>
+    </a>
+</div>
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+<script>
+    function updateCartCount() {
+        fetch('/cart-count')
+            .then(response => response.json())
+            .then(data => {
+                const cartBadge = document.getElementById('cart-count');
+                if (cartBadge) {
+                    const oldCount = parseInt(cartBadge.textContent);
+                    const newCount = data.count;
+                    cartBadge.textContent = newCount;
+                    if (newCount > oldCount) {
+                        cartBadge.classList.add('bump');
+                        setTimeout(() => {
+                            cartBadge.classList.remove('bump');
+                        }, 300);
+                    }
+                }
+            })
+            .catch(error => console.error('Error updating cart:', error));
+    }
+
+    document.addEventListener('DOMContentLoaded', updateCartCount);
+    setInterval(updateCartCount, 5000);
+</script>
+</body>
+</html>

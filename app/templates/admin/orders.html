@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Управление заказами</h1>
+
+{% for order in orders %}
+<div style="border:1px solid #ccc; padding:15px; margin-bottom:20px;">
+
+    <h3>Заказ №{{ order.id }}</h3>
+
+    <p><strong>Статус:</strong> {{ order.status }}</p>
+    <p><strong>Дата:</strong> {{ order.created_at }}</p>
+
+    <p><strong>Имя:</strong> {{ order.customer_name }}</p>
+    <p><strong>Телефон:</strong> {{ order.customer_phone }}</p>
+    <p><strong>Email:</strong> {{ order.customer_email }}</p>
+
+    <hr>
+
+    <h4>Фото:</h4>
+
+    {% set total = 0 %}
+
+    {% for item in order.items %}
+        <div style="margin-bottom:10px;">
+            {{ item.photo.filename }} —
+            {{ item.photo.price }} ₽
+        </div>
+        {% set total = total + item.photo.price %}
+    {% endfor %}
+
+    <p><strong>Итого:</strong> {{ total }} ₽</p>
+
+    <hr>
+
+    <form method="POST" action="{{ url_for('admin.confirm_order', order_id=order.id) }}" style="display:inline;">
+        <button type="submit">Подтвердить</button>
+    </form>
+
+    <form method="POST" action="{{ url_for('admin.cancel_order', order_id=order.id) }}" style="display:inline;">
+        <button type="submit">Отменить</button>
+    </form>
+
+    <form method="POST" action="{{ url_for('admin.delete_order', order_id=order.id) }}" style="display:inline;">
+        <button type="submit" onclick="return confirm('Удалить заказ?')">
+            Удалить
+        </button>
+    </form>
+
+</div>
+{% else %}
+<p>Заказов пока нет</p>
+{% endfor %}
+
+{% endblock %}

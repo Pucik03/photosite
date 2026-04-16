@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="info-page">
+    <div class="container">
+        <h1>Информация</h1>
+
+        <!-- Навигация по разделам -->
+        <div class="info-nav">
+            <a href="#about-product" class="info-nav-link">📷 О товаре</a>
+            <a href="#delivery" class="info-nav-link">🚚 Доставка</a>
+            <a href="#contacts" class="info-nav-link">📞 Контакты</a>
+            <a href="#privacy" class="info-nav-link">🔒 Политика обработки ПД</a>
+            <a href="#offer" class="info-nav-link">📄 Публичная оферта</a>
+        </div>
+
+        <!-- Раздел: О товаре -->
+        <div id="about-product" class="info-section">
+            <h2>📷 О товаре</h2>
+            <div class="info-card">
+                <p><strong>Товаром является Фотография (Фотографии) в цифровом виде без водяного знака в формате «JPEG».</strong></p>
+                <p>Стоимость фотографий зависит от мероприятия, на котором они были сделаны. Фотографии выгружаются на данный веб-сайт в течение 1-5 (одного-пяти) календарных дней после проведения мероприятия и хранятся на нем в течение 30 (тридцати) календарных дней.</p>
+                <p>Цена каждой фотографии указана под ней на кнопке «В корзину».</p>
+                <p>Итоговая стоимость товара (сумма заказа) зависит от количества выбранных фотографий и отображается в разделе «Корзина» и при подтверждении заказа.</p>
+            </div>
+        </div>
+
+        <!-- Раздел: Доставка -->
+        <div id="delivery" class="info-section">
+            <h2>🚚 Доставка</h2>
+            <div class="info-card">
+                <p>Доставка фотографий производится только в цифровом формате «JPEG».</p>
+                <p>После подтверждения и оплаты заказа в течение 24 часов на указанную при оформлении заказа электронную почту поступает ссылка для скачивания приобретенных фотографий.</p>
+            </div>
+        </div>
+
+        <!-- Раздел: Контакты -->
+        <div id="contacts" class="info-section">
+            <h2>📞 Контакты</h2>
+            <div class="info-card">
+                <div class="contacts-grid">
+                    <div class="contact-item">
+                        <span class="contact-label">Исполнитель:</span>
+                        <span>Плательщик налога на профессиональный доход Звонарёва Виктория Вячеславовна</span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-label">ИНН:</span>
+                        <span>694201463426</span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-label">Постановка на учет:</span>
+                        <span>10.06.2024 г. Управлением Федеральной налоговой службы по Тверской области</span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-label">Телефон:</span>
+                        <span><a href="tel:+79806315051">+7 (980) 631-50-51</a></span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-label">E-mail:</span>
+                        <span><a href="mailto:korolkov.prod@yandex.ru">korolkov.prod@yandex.ru</a></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Раздел: Политика обработки персональных данных (краткая версия) -->
+        <div id="privacy" class="info-section">
+            <h2>🔒 Политика обработки персональных данных</h2>
+            <div class="info-card">
+                <p>Оператор персональных данных — Звонарёва Виктория Вячеславовна (ИНН: 694201463426).</p>
+                <p>Персональные данные обрабатываются исключительно для предоставления услуг сайта, связи с пользователем и выполнения требований законодательства.</p>
+                <p>Пользователь имеет право на получение информации о своих данных, их уточнение или удаление.</p>
+                <a href="{{ url_for('public.privacy_policy') }}" class="info-link">Подробная политика →</a>
+            </div>
+        </div>
+
+        <!-- Раздел: Публичная оферта (краткая версия) -->
+        <div id="offer" class="info-section">
+            <h2>📄 Публичная оферта</h2>
+            <div class="info-card">
+                <p>Оформление заказа и внесение оплаты подтверждают полное и безоговорочное согласие с условиями публичной оферты.</p>
+                <a href="{{ url_for('public.public_offer') }}" class="info-link">Подробная оферта →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .info-page {
+        padding: 40px 0;
+    }
+
+    .info-page h1 {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    /* Навигация по разделам */
+    .info-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 50px;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 80px;
+        background: var(--bg-primary);
+        z-index: 10;
+    }
+
+    .info-nav-link {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        padding: 10px 20px;
+        border-radius: 40px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .info-nav-link:hover {
+        background: var(--accent-primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Секции */
+    .info-section {
+        margin-bottom: 50px;
+        scroll-margin-top: 100px;
+    }
+
+    .info-section h2 {
+        margin-bottom: 20px;
+    }
+
+    .info-card {
+        background: rgba(36, 36, 36, 0.9);
+        backdrop-filter: blur(5px);
+        border-radius: 16px;
+        padding: 30px;
+        border: 1px solid var(--border-color);
+    }
+
+    .info-card p {
+        margin-bottom: 15px;
+        line-height: 1.7;
+    }
+
+    .info-card p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Контакты */
+    .contacts-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .contact-item {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .contact-item:last-child {
+        border-bottom: none;
+    }
+
+    .contact-label {
+        font-weight: 600;
+        color: var(--accent-primary);
+        min-width: 180px;
+    }
+
+    .contact-item a {
+        color: var(--accent-primary);
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .contact-item a:hover {
+        color: var(--accent-hover);
+        text-decoration: underline;
+    }
+
+    /* Ссылка "Подробнее" */
+    .info-link {
+        display: inline-block;
+        margin-top: 15px;
+        color: var(--accent-primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform 0.3s;
+    }
+
+    .info-link:hover {
+        transform: translateX(5px);
+        color: var(--accent-hover);
+    }
+
+    @media (max-width: 768px) {
+        .info-nav {
+            position: static;
+            gap: 10px;
+        }
+
+        .info-nav-link {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+        }
+
+        .contact-label {
+            min-width: 100px;
+        }
+
+        .info-card {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}

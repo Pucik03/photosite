@@ -1,0 +1,670 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="groups-manager">
+    <!-- Хедер страницы -->
+    <div class="page-header">
+        <div>
+            <div class="event-breadcrumb">
+                <a href="{{ url_for('admin.dashboard') }}" class="back-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Назад к событиям
+                </a>
+            </div>
+            <h1>Группы события</h1>
+            <div class="event-info">
+                <span class="event-title">{{ event.title }}</span>
+                <span class="event-badge">{{ event.groups|length }} групп</span>
+            </div>
+        </div>
+        <div class="event-preview">
+            {% if event.preview_image %}
+            <img src="{{ url_for('static', filename='uploads/' + event.preview_image) }}" alt="{{ event.title }}">
+            {% else %}
+            <div class="preview-placeholder">📸</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Создание новой группы -->
+    <div class="create-group-card">
+        <h2>Создать новую группу</h2>
+        <form method="POST" action="{{ url_for('admin.create_group', event_id=event.id) }}" class="create-group-form">
+            <div class="form-group">
+                <label for="group-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22 6 12 13 2 6"></polyline>
+                    </svg>
+                    Название группы
+                </label>
+                <input type="text" name="title" id="group-title" placeholder="Например: Выступление №3..." required>
+            </div>
+            <button type="submit" class="create-group-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Создать группу
+            </button>
+        </form>
+    </div>
+
+    <!-- Список групп -->
+    <div class="groups-list">
+        <h2>Все группы</h2>
+
+        {% for group in event.groups %}
+        <div class="group-card" id="group-{{ group.id }}">
+            <div class="group-header">
+                <div class="group-title-wrapper">
+                    <div class="group-icon">📁</div>
+                    <h3>{{ group.title }}</h3>
+                    <span class="photo-count">{{ group.photos|length }} фото</span>
+                </div>
+                <form method="POST" action="{{ url_for('admin.delete_group', group_id=group.id) }}" class="delete-group-form">
+                    <button type="submit" class="delete-group-btn" onclick="return confirm('Удалить группу «{{ group.title }}»? Все фотографии в группе будут удалены безвозвратно.')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Удалить группу
+                    </button>
+                </form>
+            </div>
+
+            <!-- Форма загрузки фото -->
+            <div class="upload-photo-section">
+                <h4>Загрузить новое фото</h4>
+                <form method="POST" action="{{ url_for('admin.upload_photo', group_id=group.id) }}" enctype="multipart/form-data" class="upload-form">
+                    <div class="upload-area" onclick="document.getElementById('photo-{{ group.id }}').click()">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <p>Нажмите для выбора фото</p>
+                        <input type="file" name="photo" id="photo-{{ group.id }}" accept="image/*" style="display: none;" onchange="previewPhoto(this, {{ group.id }})">
+                    </div>
+                    <div class="upload-details">
+                        <input type="number" step="0.01" name="price" placeholder="Цена в ₽" required class="price-input">
+                        <button type="submit" class="upload-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 3v12m0 0-3-3m3 3 3-3M5 21h14"></path>
+                            </svg>
+                            Загрузить
+                        </button>
+                    </div>
+                </form>
+                <div class="photo-preview" id="preview-{{ group.id }}"></div>
+            </div>
+
+            <!-- Список фото в группе -->
+            {% if group.photos %}
+            <div class="photos-grid">
+                {% for photo in group.photos %}
+                <div class="photo-item" id="photo-{{ photo.id }}">
+                    <div class="photo-preview-card">
+                        <img src="{{ url_for('static', filename='uploads/' + photo.thumb_filename) }}" alt="Фото">
+                        <div class="photo-overlay-actions">
+                            <a href="{{ url_for('static', filename='uploads/' + photo.preview_filename) }}" target="_blank" class="view-btn" title="Увеличить">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </a>
+                            <form method="POST" action="{{ url_for('admin.delete_photo', photo_id=photo.id) }}" style="display: inline;">
+                                <button type="submit" class="delete-photo-btn" onclick="return confirm('Удалить это фото?')" title="Удалить">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="photo-info-card">
+                        <span class="photo-price">{{ "%.2f"|format(photo.price) }} ₽</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-photos">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <p>В этой группе пока нет фотографий</p>
+                <span>Загрузите первое фото выше</span>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <h3>Нет групп</h3>
+            <p>Создайте первую группу, чтобы начать загружать фотографии</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .groups-manager {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Хедер страницы */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .event-breadcrumb {
+        margin-bottom: 15px;
+    }
+
+    .back-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: var(--accent-primary);
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .event-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .event-title {
+        background: var(--accent-primary);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: white;
+    }
+
+    .event-badge {
+        background: var(--bg-tertiary);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .event-preview {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--bg-tertiary);
+    }
+
+    .event-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .preview-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+    }
+
+    /* Карточка создания группы */
+    .create-group-card {
+        background: var(--bg-secondary);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 40px;
+        border: 1px solid var(--border-color);
+    }
+
+    .create-group-card h2 {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+
+    .create-group-form {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .create-group-form .form-group {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .create-group-form label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+    }
+
+    .create-group-form input {
+        width: 100%;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 15px;
+        color: var(--text-primary);
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.3s;
+    }
+
+    .create-group-form input:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+    }
+
+    .create-group-btn {
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 40px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+
+    .create-group-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(246, 142, 86, 0.3);
+    }
+
+    /* Список групп */
+    .groups-list h2 {
+        font-size: 1.5rem;
+        margin-bottom: 25px;
+    }
+
+    .group-card {
+        background: var(--bg-secondary);
+        border-radius: 20px;
+        margin-bottom: 30px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s;
+    }
+
+    .group-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 25px;
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .group-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .group-icon {
+        font-size: 1.5rem;
+    }
+
+    .group-header h3 {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+    .photo-count {
+        background: var(--bg-secondary);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .delete-group-btn {
+        background: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s;
+    }
+
+    .delete-group-btn:hover {
+        background: #e74c3c;
+        color: white;
+    }
+
+    /* Секция загрузки фото */
+    .upload-photo-section {
+        padding: 25px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .upload-photo-section h4 {
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        color: var(--text-secondary);
+    }
+
+    .upload-form {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .upload-area {
+        background: var(--bg-tertiary);
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        padding: 20px 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        min-width: 200px;
+    }
+
+    .upload-area:hover {
+        border-color: var(--accent-primary);
+        background: var(--bg-hover);
+    }
+
+    .upload-area svg {
+        stroke: var(--text-muted);
+        margin-bottom: 10px;
+    }
+
+    .upload-area p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .upload-details {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex: 1;
+    }
+
+    .price-input {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 15px;
+        color: var(--text-primary);
+        width: 150px;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .price-input:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+    }
+
+    .upload-btn {
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+
+    .upload-btn:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+
+    .photo-preview {
+        margin-top: 15px;
+    }
+
+    .preview-img {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 8px;
+        border: 2px solid var(--accent-primary);
+    }
+
+    /* Сетка фото */
+    .photos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 25px;
+    }
+
+    .photo-item {
+        background: var(--bg-tertiary);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+
+    .photo-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .photo-preview-card {
+        position: relative;
+        width: 100%;
+        padding-top: 100%;
+        overflow: hidden;
+        background: var(--bg-secondary);
+    }
+
+    .photo-preview-card img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-overlay-actions {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .photo-preview-card:hover .photo-overlay-actions {
+        opacity: 1;
+    }
+
+    .view-btn {
+        background: var(--accent-primary);
+        padding: 8px;
+        border-radius: 8px;
+        display: inline-flex;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+
+    .view-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .delete-photo-btn {
+        background: #e74c3c;
+        border: none;
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        transition: transform 0.2s;
+    }
+
+    .delete-photo-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .photo-info-card {
+        padding: 12px;
+        text-align: center;
+    }
+
+    .photo-price {
+        font-weight: 700;
+        color: var(--accent-primary);
+        font-size: 1rem;
+    }
+
+    /* Пустые состояния */
+    .empty-photos {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+    }
+
+    .empty-photos svg {
+        stroke: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .empty-photos p {
+        margin-bottom: 5px;
+    }
+
+    .empty-photos span {
+        font-size: 0.8rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--bg-secondary);
+        border-radius: 16px;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 15px;
+    }
+
+    .empty-state h3 {
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .create-group-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .upload-form {
+            flex-direction: column;
+        }
+
+        .upload-details {
+            width: 100%;
+        }
+
+        .price-input {
+            flex: 1;
+        }
+
+        .photos-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .group-header {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+    }
+</style>
+
+<script>
+    function previewPhoto(input, groupId) {
+        const previewDiv = document.getElementById(`preview-${groupId}`);
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewDiv.innerHTML = `<img src="${e.target.result}" class="preview-img" alt="Preview">`;
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            previewDiv.innerHTML = '';
+        }
+    }
+</script>
+{% endblock %}
